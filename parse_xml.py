@@ -23,10 +23,12 @@ meas_ids = []
 grp_ids = []
 grp_summary_ids = []
 group_factor_results = []
+group_grp_ids = []
 meas_by_day = []
 animal_key = AutoVivification()
 an_grp_key = AutoVivification()
 grp_key = AutoVivification()
+group_grp_key = AutoVivification()
 meas_key = AutoVivification()
 grp_summary_key = AutoVivification()
 results = AutoVivification()
@@ -56,12 +58,19 @@ for meas in root.iter('MEASUREMENT'):
   meas_ids.append(meas_id)
   meas_key[meas_id] = meas_name
   
-#Collect group ID info
+#Collect individual file group ID info
 for grp in root.iter('GROUP'):
   grp_id = str(grp.find('GROUP_ID').text)
   grp_name = str(grp.find('GROUP_LONG_NAME').text)
   grp_ids.append(grp_id)
   grp_key[grp_id] = grp_name
+  
+#Collect group file group ID info
+for grp in grp_root.iter('GROUP'):
+  grp_id = str(grp.find('GROUP_ID').text)
+  grp_name = str(grp.find('GROUP_LONG_NAME').text)
+  group_grp_ids.append(grp_id)
+  group_grp_key[grp_id] = grp_name
   
 #Collect group summary ID info
 for summ in grp_root.iter('GROUP_SUMMARY'):
@@ -81,7 +90,6 @@ for gft in grp_root.iter('GROUP_FACTOR_RESULT'):
   else:
     tp = 'Day ' + tpf + ' - Day ' + tpt
   group_factor_results.append(tp)
-print (group_factor_results)
   
 #Collect animal results by measurement and UAR
 for result in root.iter('ANIMAL_RESULT'):
@@ -97,6 +105,7 @@ for result in root.iter('ANIMAL_RESULT'):
 for result in grp_root.iter('GROUP_SUMMARY_RESULT'):
   for grp_id_result in result.iter('GROUP_ID'):
     gn = grp_id_result.text
+    group_grp_ids.append(gn)
   for mid_result in result.iter('MEASUREMENT_ID'):
     mid = mid_result.text
   for gsid_result in result.iter('GROUP_SUMMARY_ID'):
@@ -112,9 +121,12 @@ for result in grp_root.iter('GROUP_SUMMARY_RESULT'):
   meas_by_day.append(tp)  
   for grp_str_result in result.iter('GROUP_RESULT_STRING'):
     val = grp_str_result.text
-    grp_results[gn][mid + ' ' + tp][gsid]['RESULT_STRING'] = val
+    grp_results[tp][gn][gsid]['RESULT_STRING'] = val
 meas_by_day = set(meas_by_day) 
 meas_by_day = list(meas_by_day)
+group_grp_ids = set(group_grp_ids)
+group_grp_ids = list(group_grp_ids)
+group_grp_ids.sort()
 
 #Initialize openpyxl workbook in memory
 wb = Workbook()
@@ -144,11 +156,20 @@ for x in range (0, len(meas_by_day)):
   ws2.merge_cells(start_row=(((x+1)*7+x)-6),start_column=2,end_row=(((x+1)*7+x)-6),end_column=len(grp_ids)+1)
   ws2.cell(row=(((x+1)*7+x)-6), column=2).value = meas_by_day[x]
   for j in range (0, len(grp_ids)):
-    ws2.cell(row=(((x+1)*7+x)-5), column=j+2).value = grp_key[grp_ids[j]]
+    ws2.cell(row=(((x+1)*7+x)-5), column=j+2).value = group_grp_key[group_grp_ids[j]]
   for i in range (0, len(grp_summary_ids)):
     ws2.cell(row=(((x+1)*7+x)-4)+i, column=1).value = grp_summary_key[grp_summary_ids[i]]
 
-      
+#Put data into the group layout
+for x in range (0, len(meas_by_day)):
+  for y in range (0, len(group_grp_ids)):
+    for z in range (0, len(grp_summary_ids)):
+      if grp_results[meas_by_day[x]][group_grp_ids[y]][grp_summary_ids[z]]['RESULT_STRING'] == {}:
+        ws2.cell(row=(((x+1)*7+x+z)-4), column=y+2).value = ''
+      else:
+        ws2.cell(row=(((x+1)*7+x+z)-4), column=y+2).value = grp_results[meas_by_day[x]][group_grp_ids[y]][grp_summary_ids[z]]['RESULT_STRING']
+
+
 save_name = (sys.argv[1].split("."))[0]
       
-wb.save('C:\\Users\\Lab Technician 6\\Desktop\\%s.xlsx' % save_name)
+wb.save('%s.xlsx' % save_name)
