@@ -21,7 +21,6 @@ meas_ids = []
 meas_by_day = []
 grp_ids = []
 grp_summary_ids = []
-group_factor_results = []  ## Remove
 group_grp_ids = []
 grp_meas_by_day = []
 animal_key = AutoVivification()
@@ -78,18 +77,6 @@ for summ in root.iter('GROUP_SUMMARY'):
   summ_name = str(summ.find('GROUP_SUMMARY_DESCR').text)
   grp_summary_ids.append(summ_id)
   grp_summary_key[summ_id] = summ_name
-
-#Collect group factor results (timepoints)
-for gft in root.iter('GROUP_FACTOR_RESULT'):
-  for tp_from in gft.iter('TIME_PERIOD_FROM'):
-    tpf = tp_from.text
-  for tp_to in gft.iter('TIME_PERIOD_TO'):
-    tpt = tp_to.text
-  if tpf == tpt:
-    tp = 'Day ' + tpf
-  else:
-    tp = 'Day ' + tpf + ' - Day ' + tpt
-  group_factor_results.append(tp)
   
 #Collect animal results by measurement and UAR
 for result in root.iter('ANIMAL_RESULT'):
