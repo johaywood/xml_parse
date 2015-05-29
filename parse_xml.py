@@ -1,3 +1,11 @@
+# Generates Excel spreadsheets from XML export of provantis data.
+# Two sheets are generated, one from the individual animal export file
+# and the other from the group stats export file.
+#
+# Usage: py -3.4 parse_xml.py individual_animal_data.xml group_data.xml
+# Move xml files to the directory where script is, or use full filepath
+
+
 import xml.etree.ElementTree as ET
 from openpyxl import Workbook
 import sys
